@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!-- saved from url=(0041)http://v3.bootcss.com/examples/dashboard/ -->
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="http://v3.bootcss.com/favicon.ico">
+
+    <title>Dashboard </title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='bootstrap/bootstrap.min.css') }}"rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="{{ url_for('static', filename='dashboard/dashboard.css') }}" rel="stylesheet">
+
+    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+    <script src="{{ url_for('static', filename='others/ie-emulation-modes-warning.js') }}"></script>
+
+  </head>
+
+  <body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="{{ url_for('dashboard') }}">FOR YOU DASHBOARD</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li role="presentation"><a href="{{ url_for('dashboard') }}">Help</a></li>
+            <li role="presentation"><a href="{{ url_for('logout') }}">Login Out</a></li>
+          </ul>
+          <form class="navbar-form navbar-right">
+            <input type="text" class="form-control" placeholder="Search...">
+          </form>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+          <ul class="nav nav-pills nav-stacked">
+            <li role="presentation" class="active"><a href="#information"  data-toggle="pill" >用户信息 </a></li>
+            <li role="presentation"  ><a href="#file" data-toggle="pill"  >查看文件</a></li>
+            <li role="presentation" ><a href="#Analytics" data-toggle="pill">Analytics</a></li>
+            <li role="presentation" ><a href="#Export" data-toggle="pill">Export</a></li>
+          </ul>
+        </div>
+	   </div>
+	   
+		<div class="tab-content ">
+       <div role="tabpanel" class="tab-pane fade in active" id="information">
+	   <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main ">         
+          <h2 class="sub-header">Section title</h2>
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>username</th>
+                  <th>Lovers</th>
+				  <th>CurrentgiftImage</th>
+				  <th>CurrentgiftVideo</th>
+                </tr>
+              </thead>
+              <tbody>
+			     {% for inf in information%}
+                <tr>
+				 {% for cell in inf%}
+                  <td>{{cell}}</td>
+                 {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+	   </div>
+      <div role="tabpanel" class="tab-pane fade " id="file" >
+	  <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main ">
+   {% for fn in filename %}
+    <div class="video">
+      <video id="video" src="{{ url_for('static', filename='uploads/'+fn) }}" width="200" height="200" controls preload ></video>
+	  <label for="video">{{fn}}</lable>
+    </div>
+   {% endfor %}
+</div>
+	  </div>
+  <div role="tabpanel" class="tab-pane fade" id="messages">...</div>
+  <div role="tabpanel" class="tab-pane fade" id="settings">...</div>
+       </div>
+		
+        
+    
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="{{ url_for('static', filename='bootstrap/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/bootstrap.min.js') }}"></script>
+    <!-- Just to make our placeholder images work. Don't actually copy the next line! -->
+    
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="{{ url_for('static', filename='others/ie10-viewport-bug-workaround.js') }}"></script>
+  
+
+</body></html>

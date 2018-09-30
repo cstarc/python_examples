@@ -1,0 +1,11 @@
+{% extends "dashboard.html" %}
+{% block content %}
+<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main tab-pane fade in active">
+   {% for fn in filename %}
+    <div class="video">
+      <video id="video" src="{{ url_for('static', filename='uploads/'+fn) }}" width="200" height="200" controls preload ></video>
+	  <label for="video">{{fn}}</lable>
+    </div>
+   {% endfor %}
+</div>
+{% endblock %}
