@@ -1,44 +1,92 @@
+
+
+
+import sys 
+from imp import reload
+#print sys.getdefaultencoding()
+reload(sys) 
+
+
 import os
 import requests
 from requests.exceptions import RequestException
 from pyquery import PyQuery as pq
 from hashlib import md5
-from multiprocessing.pool import Pool
+from multiprocessing.pool import ThreadPool as Pool
+import argparse
 
-def get_one_page(url):
-    try:
-        response = requests.get(url)
-        response.encoding='utf-8'
-        if response.status_code == 200:
-            return response.text
-        return None
-    except RequestException:
-        return None
+class spider_image:
+    def __init__(self,url,max_page,max_pic,path):
+        self.m_url=url
+        self.m_max_page=max_page
+        self.m_max_pic=max_pic
+        self.image_path=path
+    
+    def run(self):
+        pool = Pool()
+        groups = ([item for item in self.get_all_pic_url()]) 
+        pool.map(self.parse_and_save_image, groups)
+        pool.close()
+        pool.join()
+    
+    # 获取图集的url，通过yield 返回 便于并发处理
+    def get_all_pic_url(self):
+        next_url=self.m_url
+        page_num=1
+        pic_num=0
+        while (next_url):
+            # parse page
+            html=self.get_one_page(next_url)
+            doc=pq(html)
+            lis=doc('.main .pic li').items()
+            if lis:
+                for item in lis:
+                    yield {
+                        'image_url': item.children('a').attr.href,
+                        'title': item.find('img').attr.alt
+                    }
+                    ++pic_num
+                    if pic_num >= self.m_max_pic:
+                        break;
 
-def get_one_image(url):
-    try:
-        # proxies={
-        #     "http": "http://127.0.0.1:1080", 
-        # }
-        response = requests.get(url)
-        if response.status_code == 200:
-            return response.text
-        return None
-    except RequestException:
-        return None
+            if page_num == self.m_max_page:
+                break
 
-def get_all_pic_url(url):
-    next_url=url
-    while (next_url):
-        html=get_one_page(next_url)
-        new_postfix=get_next_images_page(html)
+            # get next url 
+            new_postfix=self.get_next_images_page(html)
+            if new_postfix!=None:
+                next_url=self.m_url+new_postfix
+            else:
+                next_url=None
+                break
+            ++page_num
 
-        if new_postfix!=None:
-            next_url='http://www.mmjpg.com'+new_postfix
-        else:
-            next_url=None
-            continue
+    def get_one_page(self,url):
+        try:
+            response = requests.get(url)
+            response.encoding='utf-8'
+            if response.status_code == 200:
+                return response.text.encode('utf-8')
+            return None
+        except RequestException:
+            return None
 
+#    def get_one_image(self,url):
+#        try:
+#            # proxies={
+#            #     "http": "http://127.0.0.1:1080", 
+#            # }
+#            response = requests.get(url)
+#            response.encoding='utf-8'
+#            print(response.text)
+#            if response.status_code == 200:
+#                return response.text
+#            return None
+#        except RequestException:
+#            return None
+
+    #解析获取图集的url
+    def get_pic_url(self,html):
         doc=pq(html)
         lis=doc('.main .pic li').items()
         if lis:
@@ -47,89 +95,84 @@ def get_all_pic_url(url):
                     'image_url': item.children('a').attr.href,
                     'title': item.find('img').attr.alt
                 }
-#获取首页图集的url
-def get_pic_url(html):
-    doc=pq(html)
-    lis=doc('.main .pic li').items()
-    if lis:
-        for item in lis:
-            yield {
-                'image_url': item.children('a').attr.href,
-                'title': item.find('img').attr.alt
-            }
-            
-def get_next_images_page(html):
-    doc=pq(html)
-    text='下一页'
-    page_url=doc('.main .page .ch').items()
-    for page in page_url:  
-        if page.text()==text:
-            return page.attr('href')
-        else:
-            continue
-    return None
-
-def get_next_image(url):
-    doc=pq(get_one_page(url))
-    text='下一张'
-    a=doc('.page .ch.next')
-    if a.text()==text:
-        return a.attr('href')
-    else:
+                
+    def get_next_images_page(self,html):
+        doc=pq(html)
+        text='下一页'
+        page_url=doc('.main .page .ch').items()
+        for page in page_url:  
+            if page.text()==text:
+                return page.attr('href')
+            else:
+                continue
         return None
 
-#获取图片集图片
-def get_image_from_pic(url):
-    next_url=url
-    while (next_url):
-        doc=pq(get_one_page(next_url))
-        image=doc('.content a img ')
-        new_postfix=get_next_image(next_url)
-        if new_postfix!=None:
-            next_url='http://www.mmjpg.com'+new_postfix
-        else:
-            next_url=None
-            continue
-
-        yield {
-            'image': image.attr.src,
-            }        
-
-
-def save_image(item,dir_name):
-    if not os.path.exists(dir_name):
-        os.mkdir(dir_name)
-        print(dir_name)
-    try:
-        print(str(item.get('image')))
-        # 加headers的Referer，不加为防盗图
-        headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/201001',
-                'Referer': 'http://www.mmjpg.com'}
-        response = requests.get(item.get('image'),headers=headers)
-        if response.status_code == 200:
-            file_path = '{0}/{1}.{2}'.format(dir_name, md5(response.content).hexdigest(), 'jpg')
-            print('file_path:'+file_path)
-            if not os.path.exists(file_path):
-                with open(file_path, 'wb')as f:
-                    f.write(response.content)
+    #获取图片集图片
+    def get_image_from_pic(self,url):
+        next_url=url
+        while (next_url):
+            doc=pq(self.get_one_page(next_url))
+            image=doc('.content a img ')
+            new_postfix=self.get_next_image(next_url)
+            if new_postfix!=None:
+                next_url=self.m_url+new_postfix
             else:
-                print('Already Downloaded', file_path)
-    except requests.ConnectionError:
-        print('Failed to save image')
+                next_url=None
+                continue
 
-def get_save_image(item):
-    dir_name=item.get('title')
-    for image in get_image_from_pic(item.get('image_url')):
-        save_image(image,dir_name)   
+            yield {
+                'image': image.attr.src,
+                }
 
-def main():
-    url = 'http://www.mmjpg.com/'
+    def get_next_image(self,url):
+        doc=pq(self.get_one_page(url))
+        text='下一张'
+        a=doc('.page .ch.next')
+        if a.text()==text:
+            return a.attr('href')
+        else:
+            return None
 
-    pool = Pool()
-    groups = ([item for item in get_all_pic_url(url)]) 
-    pool.map(get_save_image, groups)
-    pool.close()
-    pool.join()        
 
-if __name__ =='__main__':    
-    main()
+    def save_image(self,item,dir_name):
+        if not os.path.exists(dir_name):
+            os.mkdir(dir_name)
+            #print(dir_name)
+        try:
+            #print(str(item.get('image')))
+            # 加headers的Referer，不加为防盗图
+            headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/201001',
+                    'Referer': self.m_url}
+            response = requests.get(item.get('image'),headers=headers)
+            if response.status_code == 200:
+                file_path = '{0}/{1}.{2}'.format(dir_name, md5(response.content).hexdigest(), 'jpg')
+                #print('file_path:'+file_path)
+                if not os.path.exists(file_path):
+                    with open(file_path, 'wb')as f:
+                        f.write(response.content)
+                else:
+                    print('Already Downloaded', file_path)
+        except requests.ConnectionError:
+            print('Failed to save image')
+
+    def parse_and_save_image(self,item):
+        dir_name=self.image_path+item.get('title')
+        
+        #print(self.image_path)
+        #print(item.get('title'))       
+        #dir_name.encode('utf-8')
+        #print(dir_name)
+
+        for image in self.get_image_from_pic(item.get('image_url')):
+            self.save_image(image,dir_name)   
+
+def main(args):
+    spider=spider_image('http://www.mmjpg.com',args.page_num,args.image_path)
+    spider.run()      
+
+if __name__ =='__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-n','--page_num',help='获取的最大page数',default='1')
+    parser.add_argument('-p','--image_path',help='image dir path',default='./')
+    args = parser.parse_args()        
+    main(args)
