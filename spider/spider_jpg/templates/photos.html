@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Gallery</title>
+	<link href="{{ url_for('static', filename='bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/htmleaf-demo.css') }}">
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/baguetteBox.min.css') }}">
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/gallery-grid.css') }}">
+</head>
+<body>
+	<div class="htmleaf-container">
+		<header class="htmleaf-header no-color">
+		<h1>Gallery</h1>
+			<div class="htmleaf-links">
+				<a class="htmleaf-icon icon-htmleaf-home-outline" href="home.html" title="HOME" ><span>Home </span></a>
+				<a class="htmleaf-icon icon-htmleaf-arrow-forward-outline" href="{{ url_for('next_photos') }}" title="下一图片集" "><span> 下一图片集</span></a>
+			</div>
+		</header>
+		<div class="container gallery-container">
+
+		    <h1>{{ photos_name }}</h1>
+		    
+		    <div class="tz-gallery">
+
+		        <div class="row">
+				    {% for image_name in image_names %}
+		            <div class="col-sm-6 col-md-4">
+		                <a class="lightbox" href="{{ url_for('static', filename='images/'+photos_name+'/'+image_name) }}">
+		                    <img src="{{ url_for('static', filename='images/'+photos_name+'/'+image_name) }}" alt="{{ photos_name }}">
+		                </a>
+		            </div>
+					{% endfor %}
+		        </div>
+
+		    </div>
+
+		</div>
+
+	</div>
+	
+	<script type="text/javascript" src="{{ url_for('static', filename='js/baguetteBox.min.js') }}"></script>
+	<script type="text/javascript">
+		baguetteBox.run('.tz-gallery');
+	</script>
+	
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="{{ url_for('static', filename='bootstrap/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='bootstrap/bootstrap.min.js') }}"></script>
+    <!-- Just to make our placeholder images work. Don't actually copy the next line! -->
+    
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="{{ url_for('static', filename='others/ie10-viewport-bug-workaround.js') }}"></script>	
+</body>
+</html>
