@@ -1,11 +1,9 @@
 
 
 
-import sys 
-from imp import reload
-#print sys.getdefaultencoding()
-reload(sys) 
-
+import sys
+sys.path.append('../../')
+from common import FileDir
 
 import os
 import requests
@@ -21,7 +19,9 @@ class spider_image:
         self.m_max_page=max_page
         self.m_max_pic=max_pic
         self.image_path=path
-    
+        self.exist_pics=FileDir.get_subdir(self.image_path)
+        print(self.exist_pics)
+
     def run(self):
         pool = Pool()
         groups = ([item for item in self.get_all_pic_url()]) 
@@ -41,13 +41,16 @@ class spider_image:
             lis=doc('.main .pic li').items()
             if lis:
                 for item in lis:
-                    yield {
+                    if item.find('img').attr.alt in self.exist_pics:   # 相同照片集name，不再爬取
+                        continue
+                    
+                    yield {#yield 不能放在另一函数
                         'image_url': item.children('a').attr.href,
                         'title': item.find('img').attr.alt
                     }
                     ++pic_num
                     if pic_num >= self.m_max_pic:
-                        break;
+                        break
 
             if page_num == self.m_max_page:
                 break
@@ -85,16 +88,16 @@ class spider_image:
 #        except RequestException:
 #            return None
 
-    #解析获取图集的url
-    def get_pic_url(self,html):
-        doc=pq(html)
-        lis=doc('.main .pic li').items()
-        if lis:
-            for item in lis:
-                yield {
-                    'image_url': item.children('a').attr.href,
-                    'title': item.find('img').attr.alt
-                }
+    # #解析获取图集的url
+    # def get_pic_url(self,html):
+    #     doc=pq(html)
+    #     lis=doc('.main .pic li').items()
+    #     if lis:
+    #         for item in lis:
+    #             yield {
+    #                 'image_url': item.children('a').attr.href,
+    #                 'title': item.find('img').attr.alt
+    #             }
                 
     def get_next_images_page(self,html):
         doc=pq(html)
