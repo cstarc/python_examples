@@ -5,10 +5,10 @@ cssselect==1.0.3
 Flask==1.0.2
 idna==2.7
 ItsDangerous==1.0.0
-Jinja2==2.10
+Jinja2>=2.10.1
 lxml==4.2.5
 MarkupSafe==1.0
 pyquery==1.4.0
 requests==2.20.0
-urllib3==1.24
+urllib3>=1.24.2
 Werkzeug==0.14.1
